@@ -12,6 +12,6 @@ pandas
 openpyxl
 
 addict
-datasets=2.16.0
+datasets==2.16.0
 simplejson
 sortedcontainers
