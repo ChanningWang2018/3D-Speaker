@@ -11,6 +11,7 @@ matplotlib
 pandas
 openpyxl
 
+# extra
 addict
 datasets==2.16.0
 simplejson

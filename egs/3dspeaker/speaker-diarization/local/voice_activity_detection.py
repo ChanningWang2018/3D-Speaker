@@ -16,6 +16,8 @@ import os
 import sys
 import json
 import argparse
+import librosa
+from modelscope.pipelines.base import Pipeline
 import torchaudio
 
 try:
@@ -59,7 +61,7 @@ def main():
             wav_path = wav_path.strip()
             wavs.append(wav_path)
 
-    vad_pipeline = pipeline(
+    vad_pipeline: Pipeline = pipeline(
         task=Tasks.voice_activity_detection,
         model=VAD_PRETRAINED["model_id"],
         model_revision=VAD_PRETRAINED["model_revision"],
@@ -68,14 +70,22 @@ def main():
     json_dict = {}
     print(f"[INFO]: Start computing VAD...")
     for wpath in wavs:
-        _, fs = torchaudio.load(wpath)
-        assert (
-            fs == VAD_PRETRAINED["sample_rate"]
-        ), "The sample rate of %s is not %d, please resample it first." % (
-            wpath,
-            VAD_PRETRAINED["sample_rate"],
-        )
-        vad_time = vad_pipeline(wpath)[0]
+        # _, fs = torchaudio.load(wpath)
+        # assert (
+        #     fs == VAD_PRETRAINED["sample_rate"]
+        # ), "The sample rate of %s is not %d, please resample it first." % (
+        #     wpath,
+        #     VAD_PRETRAINED["sample_rate"],
+        # )
+        y, fs = librosa.load(wpath, sr=None)
+        if fs != VAD_PRETRAINED["sample_rate"]:
+            wav_16k = librosa.resample(y, orig_sr=fs, target_sr=sr)
+            print(f"The sample rate of {wpath} is not 16k, resample it first.")
+
+        else:
+            wav_16k = y
+
+        vad_time = vad_pipeline(wav_16k)[0] # type: ignore
         wid = os.path.basename(wpath).rsplit(".", 1)[0]
         for vad_t in vad_time["value"]:
             strt = round(vad_t[0] / 1000, 2)
