@@ -79,13 +79,15 @@ def main():
         # )
         y, fs = librosa.load(wpath, sr=None)
         if fs != VAD_PRETRAINED["sample_rate"]:
-            wav_16k = librosa.resample(y, orig_sr=fs, target_sr=sr)
+            wav_16k = librosa.resample(
+                y, orig_sr=fs, target_sr=VAD_PRETRAINED["sample_rate"]
+            )
             print(f"The sample rate of {wpath} is not 16k, resample it first.")
 
         else:
             wav_16k = y
 
-        vad_time = vad_pipeline(wav_16k)[0] # type: ignore
+        vad_time = vad_pipeline(wav_16k)[0]  # type: ignore
         wid = os.path.basename(wpath).rsplit(".", 1)[0]
         for vad_t in vad_time["value"]:
             strt = round(vad_t[0] / 1000, 2)
